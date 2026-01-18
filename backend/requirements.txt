@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+
+
+# server running script
+# uvicorn app:app --reload
