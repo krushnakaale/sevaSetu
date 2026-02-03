@@ -1,14 +1,18 @@
 export default function Hero() {
   return (
-    <section className="bg-gray-100 py-20">
-      <div className="max-w-4xl mx-auto text-center px-4">
-        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+    <section className="relative bg-gradient-to-b from-gray-100 to-white py-24">
+      <div className="max-w-5xl mx-auto text-center px-6">
+        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mt-2 mb-6">
           About AIPP
         </h1>
-        <p className="text-lg sm:text-xl text-gray-700 mb-8">
-          Learn more about our mission, services, and the team behind AIPP.
+
+        <p className="text-base sm:text-xl text-gray-700 max-w-3xl mx-auto mb-10 leading-relaxed">
+          AIPP is an AI-powered interview preparation platform for students.
+          Practice real interviews using voice and camera, review your sessions,
+          and get smart feedback to improve with every attempt.
         </p>
-        <button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-6 py-3 rounded-lg transition-colors duration-300">
+
+        <button className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-8 py-3 rounded-lg shadow-md transition transform hover:scale-105 duration-300">
           Learn More
         </button>
       </div>
