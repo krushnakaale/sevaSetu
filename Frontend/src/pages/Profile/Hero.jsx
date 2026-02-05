@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function Hero() {
   return (
     <section className="bg-gray-100 py-20">

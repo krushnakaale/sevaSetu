@@ -1,82 +1,112 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import axiosInstance from "../../api/axios"; // axios instance
-
+import { login } from "../../api/axios";
+import React from 'react'
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError("");
+    setLoading(true);
+
     try {
-      const res = await axiosInstance.post("/auth/login", { email, password });
+      const result = await login(email, password);
 
-      // ✅ Store token
-      localStorage.setItem("access_token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (result.success) {
+        const role = result.data.user.role;
 
-      // Redirect based on role
-      if (res.data.user.role === "admin") {
-        navigate("/admin");
+        // Redirect based on role
+        if (role === "admin") navigate("/admin/dashboard");
+        else if (role === "doctor") navigate("/doctor/dashboard");
+        else if (role === "pharmacy") navigate("/pharmacy/dashboard");
+        else navigate("/dashboard");
       } else {
-        navigate("/student");
+        setError(result.message || "Login failed");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Something went wrong. Please try again.",
-      );
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-full max-w-md border border-gray-300 p-8 rounded-lg shadow-md">
+        <h1 className="text-2xl font-semibold text-gray-900 text-center">
+          Citizen Login
+        </h1>
+        <p className="text-sm text-gray-600 text-center mt-1">
+          Access your registered account
+        </p>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-3 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-        />
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-2 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-        />
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
 
-        <div className="text-right mb-4">
-          <NavLink
-            to="/forgot-password"
-            className="text-sm text-yellow-500 hover:underline"
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+              placeholder="********"
+              required
+            />
+          </div>
+
+          <div className="text-right">
+            <NavLink
+              to="/forgot-password"
+              className="text-sm text-yellow-600 hover:underline"
+            >
+              Forgot Password?
+            </NavLink>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-2 font-semibold rounded transition ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            Forgot Password?
-          </NavLink>
-        </div>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
 
-        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-
-        <button
-          onClick={handleLogin}
-          className="w-full bg-yellow-400 py-2 rounded font-semibold hover:bg-yellow-500 transition"
-        >
-          Login
-        </button>
-
-        <p className="mt-4 text-sm text-center text-gray-600">
-          Don’t have an account?
+        <p className="mt-6 text-sm text-center text-gray-700">
+          New user?
           <NavLink
             to="/register"
-            className="text-yellow-500 font-semibold ml-1 hover:underline"
+            className="ml-1 text-yellow-600 font-semibold hover:underline"
           >
-            Sign Up
+            Register here
           </NavLink>
         </p>
       </div>

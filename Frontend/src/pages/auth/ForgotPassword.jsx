@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import axios from "axios";
-
+import axiosInstance from "../../api/axios";
+import React from 'react';
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -10,89 +10,70 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
     setError("");
-
-    if (!email) {
-      return setError("Email is required");
-    }
+    setMessage("");
 
     try {
       setLoading(true);
-
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
-        { email },
-      );
-
+      const res = await axiosInstance.post("/auth/forgotpassword", { email });
       setMessage(res.data.message || "Reset link sent to your email");
-      setEmail("");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send reset link");
+      setError(err.response?.data?.message || "Unable to process request");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center">Reset Password</h2>
-
-        <p className="text-sm text-gray-600 mb-4 text-center">
-          Enter your registered email address and we’ll send you a reset link.
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="w-full max-w-md border border-gray-300 p-8 rounded-lg shadow-md">
+        <h1 className="text-2xl font-semibold text-center text-gray-900">
+          Reset Password
+        </h1>
+        <p className="text-sm text-gray-600 text-center mt-2">
+          Enter your registered email to receive reset link
         </p>
 
-        {/* Success */}
         {message && (
-          <p className="text-green-600 text-sm text-center mb-3">{message}</p>
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+            <p className="text-green-600 text-sm">{message}</p>
+          </div>
         )}
-
-        {/* Error */}
         {error && (
-          <p className="text-red-600 text-sm text-center mb-3">{error}</p>
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="mt-6">
           <input
             type="email"
-            placeholder="Enter your email"
+            placeholder="Registered Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="w-full border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+            required
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-yellow-400 py-2 rounded font-semibold hover:bg-yellow-500 transition disabled:opacity-60"
+            className={`mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-2 font-semibold rounded transition ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
-        {/* Bottom Links */}
-        <div className="mt-5 text-center text-sm text-gray-600 space-y-2">
-          <p>
-            Remembered your password?
-            <NavLink
-              to="/login"
-              className="text-yellow-500 font-semibold ml-1 hover:underline"
-            >
-              Login
-            </NavLink>
-          </p>
-
-          <p>
-            Don’t have an account?
-            <NavLink
-              to="/register"
-              className="text-yellow-500 font-semibold ml-1 hover:underline"
-            >
-              Create one
-            </NavLink>
-          </p>
-        </div>
+        <p className="mt-6 text-sm text-center">
+          <NavLink
+            to="/login"
+            className="text-yellow-600 font-semibold hover:underline"
+          >
+            ← Back to Login
+          </NavLink>
+        </p>
       </div>
     </div>
   );

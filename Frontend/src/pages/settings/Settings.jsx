@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axios";
-
+import React from "react";
 export default function Settings({ user, setUser }) {
   const [form, setForm] = useState({
     name: "",

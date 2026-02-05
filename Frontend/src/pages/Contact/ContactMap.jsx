@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function ContactMap() {
   return (
     <section className="py-16 bg-gray-50">

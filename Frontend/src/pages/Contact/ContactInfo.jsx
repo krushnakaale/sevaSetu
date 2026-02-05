@@ -7,7 +7,7 @@ import {
   FaInstagram,
   FaGlobe,
 } from "react-icons/fa";
-
+import React from "react";
 export default function ContactInfo() {
   const items = [
     {
