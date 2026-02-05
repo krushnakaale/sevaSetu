@@ -33,25 +33,15 @@ axiosInstance.interceptors.response.use(
 
     // Handle 401 - Unauthorized (token expired or invalid)
     if (error.response?.status === 401) {
-      // ✅ Only redirect if user was logged in (had token)
       const hadToken = localStorage.getItem("access_token");
-
-      console.error("Unauthorized! Clearing session...");
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
-
-      // Only redirect if:
-      // 1. User had a token (was logged in)
-      // 2. Not already on login/register page
-      // 3. Not a retry request
-      if (
-        hadToken &&
-        !window.location.pathname.includes("/login") &&
-        !window.location.pathname.includes("/register") &&
-        !originalRequest._retry
-      ) {
+      if (hadToken && !onLoginOrRegister && !originalRequest._retry) {
         window.location.href = "/login";
       }
+    }
+    if (error.response?.status === 403) {
+      console.error("Access denied:", error.response?.data?.message);
     }
 
     // Handle 403 - Forbidden

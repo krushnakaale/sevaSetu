@@ -1,12 +1,33 @@
-import React from "react";
-
-const PHARMACIES = [
-  { id: 1, name: "City Pharmacy", distance: "0.5 km", rating: 4.5 },
-  { id: 2, name: "HealthPlus", distance: "1.2 km", rating: 4.2 },
-  { id: 3, name: "MediCare", distance: "2 km", rating: 4.7 },
-];
+import React, { useEffect, useState } from "react";
+import { getPharmacies } from "../../api/pharmacy";
 
 export default function PharmacySelector() {
+  const [pharmacies, setPharmacies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPharmacies() {
+      try {
+        setLoading(true);
+        const data = await getPharmacies(); // fetch from backend
+        setPharmacies(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPharmacies();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="py-12 text-center text-gray-500">
+        Loading pharmacies...
+      </div>
+    );
+  }
+
   return (
     <section className="py-12 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
@@ -15,18 +36,22 @@ export default function PharmacySelector() {
         </h2>
 
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {PHARMACIES.map((ph) => (
+          {pharmacies.map((ph) => (
             <div
-              key={ph.id}
-              className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition "
+              key={ph._id}
+              className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition"
             >
               <h3 className="font-semibold text-gray-900 text-lg mb-2">
-                {ph.name}
+                {ph.pharmacyName}
               </h3>
-              <p className="text-sm text-gray-500 mb-1">
-                Distance: {ph.distance}
+              {ph.address?.city && (
+                <p className="text-sm text-gray-500 mb-1">
+                  City: {ph.address.city}
+                </p>
+              )}
+              <p className="text-sm text-gray-500 mb-4">
+                Rating: {ph.rating || "N/A"}
               </p>
-              <p className="text-sm text-gray-500 mb-4">Rating: {ph.rating}</p>
 
               <button className="w-full py-2 rounded-md bg-gray-800 text-gray-100 font-medium hover:bg-gray-900 transition">
                 Select

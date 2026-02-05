@@ -42,6 +42,7 @@ export default function App() {
       setUser(u);
       setLoading(false);
     }
+
     fetchUser();
 
     const handleStorage = () => fetchUser();
@@ -52,26 +53,26 @@ export default function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen bg-white">
-        <Navbar user={loading ? null : user} />
+        <Navbar user={user} setUser={setUser} />
 
         <main className="flex-grow">
           <Routes>
-            {/* 🌐 Public */}
+            {/* Public */}
             <Route path="/" element={<HomePage />} />
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* 💊 Core Health Features */}
+            {/* Core Health Features */}
             <Route path="/medicines" element={<MedicinesPage />} />
             <Route path="/consult" element={<ConsultPage />} />
             <Route path="/tracker" element={<TrackerPage />} />
             <Route path="/emergency" element={<EmergencyPage />} />
 
-            {/* 🔐 Auth */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Auth */}
+            <Route path="/login" element={<Login setUser={setUser} />} />
+            <Route path="/register" element={<Register setUser={setUser} />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* 👨‍🎓 User Protected */}
+            {/* User Protected */}
             <Route
               path="/dashboard"
               element={
@@ -80,7 +81,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/profile"
               element={
@@ -89,7 +89,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/settings"
               element={
@@ -99,9 +98,9 @@ export default function App() {
               }
             />
 
-            {/* 👨‍💼 Admin Protected */}
+            {/* Admin Protected */}
             <Route
-              path="/admin"
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute user={user} role="admin">
                   <AdminDashboard />
@@ -109,7 +108,7 @@ export default function App() {
               }
             />
 
-            {/* ❌ 404 */}
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

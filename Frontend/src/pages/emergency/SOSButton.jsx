@@ -1,5 +1,7 @@
 import { useState } from "react";
 import React from "react";
+import { sendSOS } from "../../api/emergency";
+
 export default function SOSButton() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -10,15 +12,21 @@ export default function SOSButton() {
     try {
       setSending(true);
 
-      // 🔗 Future API Hook
-      // await fetch("/api/sos", { method: "POST" });
-
-      // 📞 Emergency fallback
-      window.location.href = "tel:108";
+      // 🆘 BACKEND CALL
+      await sendSOS({
+        emergency_type: "Medical Emergency",
+        message: "User triggered SOS from app",
+        location: "Live location shared via app",
+      });
 
       setSent(true);
     } catch (error) {
-      alert("Failed to send SOS. Please try again.");
+      console.error("SOS failed:", error);
+
+      // 📞 HARD FALLBACK (REAL WORLD)
+      window.location.href = "tel:108";
+
+      alert("SOS failed. Calling emergency number.");
     } finally {
       setSending(false);
     }
@@ -32,7 +40,6 @@ export default function SOSButton() {
       <button
         onClick={handleSOS}
         disabled={sending}
-        aria-label="Send Emergency SOS"
         className={`w-40 h-40 sm:w-44 sm:h-44 rounded-full text-2xl font-extrabold shadow-lg transition
           flex items-center justify-center mx-auto
           ${sent ? "bg-green-600" : "bg-red-600 hover:scale-105 active:scale-95"}

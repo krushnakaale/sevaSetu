@@ -1,8 +1,38 @@
 import { useState } from "react";
-import React from "react";
+import axios from "axios";
+
 export default function PrescriptionUpload() {
   const [file, setFile] = useState(null);
   const [notes, setNotes] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage("Please select a file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("prescription", file);
+    formData.append("notes", notes);
+
+    try {
+      // ✅ Use full backend URL
+      const { data } = await axios.post(
+        "http://localhost:5000/api/prescriptions", // <- your backend URL
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true, // only if backend uses cookies/auth
+        },
+      );
+      setMessage(data.message);
+      setFile(null);
+      setNotes("");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Upload failed");
+    }
+  };
 
   return (
     <section className="py-12 max-w-7xl mx-auto px-6 bg-white border rounded-xl shadow-sm">
@@ -25,9 +55,14 @@ export default function PrescriptionUpload() {
         className="w-full border rounded-md p-3 h-24 resize-none mb-4"
       />
 
-      <button className="w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-md font-semibold">
+      <button
+        onClick={handleUpload}
+        className="w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-md font-semibold"
+      >
         Upload Prescription
       </button>
+
+      {message && <p className="mt-3 text-gray-700">{message}</p>}
     </section>
   );
 }

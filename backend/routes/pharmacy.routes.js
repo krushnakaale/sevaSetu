@@ -10,8 +10,8 @@ const {
   getDashboard,
   updateAvailability,
 } = require("../controllers/pharmacy.controller");
-const { protect, authorize } = require("../middlewares/auth.middleware"); // ✅ Fixed
-const { checkPharmacyVerification } = require("../middlewares/role.middleware"); // ✅ Fixed
+const { protect, authorize } = require("../middlewares/auth.middleware"); 
+const { checkPharmacyVerification } = require("../middlewares/role.middleware"); 
 
 const router = express.Router();
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { login } from "../../api/axios";
-import React from 'react'
-export default function Login() {
+import { login, getCurrentUser } from "../../api/axios";
+import React from "react";
+
+export default function Login({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,9 +19,12 @@ export default function Login() {
       const result = await login(email, password);
 
       if (result.success) {
-        const role = result.data.user.role;
+        // ✅ Immediately update App state
+        const userData = await getCurrentUser();
+        setUser(userData);
 
         // Redirect based on role
+        const role = result.data.user.role;
         if (role === "admin") navigate("/admin/dashboard");
         else if (role === "doctor") navigate("/doctor/dashboard");
         else if (role === "pharmacy") navigate("/pharmacy/dashboard");

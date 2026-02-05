@@ -1,11 +1,13 @@
 import { useState } from "react";
-import React from 'react';
+import React from "react";
+import { shareLiveLocation } from "../../api/emergency";
+
 export default function LiveLocationShare() {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const [error, setError] = useState("");
 
-  const shareLocation = () => {
+  const shareLocation = async () => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported on this device.");
       return;
@@ -15,25 +17,32 @@ export default function LiveLocationShare() {
     setError("");
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
 
-        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+          // 🔴 BACKEND CALL
+          await shareLiveLocation({
+            latitude,
+            longitude,
+            shareWith: "emergency_contacts",
+          });
 
-        setLocation({ latitude, longitude, mapsLink });
-        setLoading(false);
+          const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-        // 🔗 Future backend hook
-        // fetch("/api/share-location", {
-        //   method: "POST",
-        //   body: JSON.stringify({ latitude, longitude }),
-        // });
+          setLocation({ latitude, longitude, mapsLink });
+        } catch (err) {
+          console.error("Location share failed:", err);
+          setError("Failed to share location. Please try again.");
+        } finally {
+          setLoading(false);
+        }
       },
       () => {
         setError("Unable to access location. Please enable GPS.");
         setLoading(false);
       },
-      { enableHighAccuracy: true },
+      { enableHighAccuracy: true, timeout: 8000 },
     );
   };
 
@@ -54,7 +63,6 @@ export default function LiveLocationShare() {
         Your live location will be shared securely with emergency responders.
       </p>
 
-      {/* Success State */}
       {location && (
         <div className="mt-6 bg-green-50 border border-green-200 p-4 rounded-lg text-left">
           <p className="text-green-800 font-medium">
@@ -76,7 +84,6 @@ export default function LiveLocationShare() {
         </div>
       )}
 
-      {/* Error State */}
       {error && (
         <div className="mt-6 bg-red-50 border border-red-200 p-4 rounded-lg text-red-700">
           {error}

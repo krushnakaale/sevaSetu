@@ -2,8 +2,9 @@ import { useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
 import React from "react";
+import { logout } from "../api/axios";
 
-export default function Navbar({ user }) {
+export default function Navbar({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false); // mobile drawer
   const [menuOpen, setMenuOpen] = useState(false); // avatar dropdown
   const navigate = useNavigate();
@@ -17,11 +18,10 @@ export default function Navbar({ user }) {
     { name: "Contact", path: "/contact" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
     setMenuOpen(false);
-    navigate("/login");
-    window.dispatchEvent(new Event("storage"));
   };
 
   return (
@@ -70,7 +70,9 @@ export default function Navbar({ user }) {
                     {user.name}
                   </p>
                   <Link
-                    to={user.role === "admin" ? "/admin" : "/dashboard"}
+                    to={
+                      user.role === "admin" ? "/admin/dashboard" : "/dashboard"
+                    }
                     className="block px-4 py-2 hover:bg-gray-100"
                     onClick={() => setMenuOpen(false)}
                   >

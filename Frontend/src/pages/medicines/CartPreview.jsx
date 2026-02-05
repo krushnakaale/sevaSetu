@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaShoppingCart } from "react-icons/fa";
 import React from "react";
-// Dummy user login state (replace with real auth)
-const isLoggedIn = true;
+import { createOrder } from "../../api/order"; // connect backend
 
-const INITIAL_CART = [
-  { id: 1, name: "Paracetamol", price: 50, qty: 1 },
-  { id: 2, name: "Ibuprofen", price: 120, qty: 2 },
-];
-
-export default function CartPreview() {
-  const [cartItems, setCartItems] = useState(INITIAL_CART);
+export default function CartPreview({ user, pharmacyId }) {
+  const [cartItems, setCartItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch cart items from backend or localStorage
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCartItems(savedCart);
+  }, []);
 
   const updateQty = (id, type) => {
     setCartItems((prev) =>
@@ -28,15 +29,46 @@ export default function CartPreview() {
 
   const total = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-  if (!isLoggedIn) {
-    return (
-      <div className="fixed right-6 top-24">
-        <p className="bg-gray-100 p-3 rounded-lg shadow text-gray-700">
-          Login to view your cart
-        </p>
-      </div>
-    );
-  }
+  const handleCheckout = async () => {
+    if (!user) {
+      alert("Please login to place an order.");
+      return;
+    }
+    if (cartItems.length === 0) {
+      alert("Cart is empty.");
+      return;
+    }
+
+    const orderData = {
+      pharmacy: pharmacyId,
+      items: cartItems.map((i) => ({
+        medicine: i.id,
+        name: i.name,
+        price: i.price,
+        quantity: i.qty,
+      })),
+      deliveryAddress: user.address, // or a form input
+      pricing: {
+        total,
+        tax: 0,
+        discount: 0,
+      },
+      paymentMethod: "cod",
+    };
+
+    try {
+      setLoading(true);
+      const res = await createOrder(orderData);
+      alert(res.message);
+      setCartItems([]);
+      localStorage.removeItem("cart");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to place order");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -90,8 +122,12 @@ export default function CartPreview() {
             <span>₹{total}</span>
           </div>
 
-          <button className="mt-6 w-full bg-gray-800 hover:bg-gray-900 text-gray-100 py-3 rounded-lg font-semibold">
-            Checkout
+          <button
+            onClick={handleCheckout}
+            disabled={loading}
+            className="mt-6 w-full bg-gray-800 hover:bg-gray-900 text-gray-100 py-3 rounded-lg font-semibold disabled:opacity-50"
+          >
+            {loading ? "Placing Order..." : "Checkout"}
           </button>
         </aside>
       )}

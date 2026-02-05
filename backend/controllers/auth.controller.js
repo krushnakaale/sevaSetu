@@ -3,8 +3,7 @@ const User = require("../models/User.model");
 const Doctor = require("../models/Doctor.model");
 const Pharmacy = require("../models/Pharmacy.model");
 const { sendTokenResponse } = require("../utils/generateToken");
-const sendEmail = require("../utils/sendEmail");
-const { emailTemplates } = require("../utils/sendEmail");
+const { sendEmail, emailTemplates } = require("../utils/sendEmail");
 
 // @desc    Register user
 // @route   POST /api/auth/register
