@@ -41,7 +41,18 @@ exports.createOrUpdateProfile = asyncHandler(async (req, res) => {
     doctor = await Doctor.create(profileData);
 
     // Update user role to doctor
-    await User.findByIdAndUpdate(userId, { role: "doctor" });
+    // await User.findByIdAndUpdate(userId, { role: "doctor" });
+
+    if (doctor) {
+      Object.keys(profileData).forEach((key) => {
+        if (profileData[key] !== undefined) {
+          doctor[key] = profileData[key];
+        }
+      });
+      await doctor.save();
+    } else {
+      doctor = await Doctor.create(profileData);
+    }
   }
 
   res.status(200).json({

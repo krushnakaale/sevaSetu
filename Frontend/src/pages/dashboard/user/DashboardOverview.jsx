@@ -1,112 +1,125 @@
-import { useEffect, useState } from "react";
-import DashboardCard from "../../../components/dashboard/DashboardCard";
-import { Calendar, ShoppingBag, HeartPulse, AlertTriangle } from "lucide-react";
-import axios from "../../../api/axios";
+import React, { useState, useEffect } from "react";
+import DashboardCard from "./DashboardCard";
+import {
+  Calendar,
+  ShoppingBag,
+  HeartPulse,
+  AlertTriangle,
+  Heart,
+  Thermometer,
+  Activity,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import axiosInstance from "../../../api/axios";
 
 export default function DashboardOverview() {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadDashboard = async () => {
+    const fetchDashboard = async () => {
       try {
-        const res = await axios.get("/user/dashboard");
-        setData(res.data.data);
-      } catch (err) {
-        console.error("Dashboard error", err);
+        const token = localStorage.getItem("token");
+        const response = await axiosInstance.get(
+          "http://localhost:8080/api/user/dashboard",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-        // 🔹 fallback sample
-        setData({
-          stats: {
-            totalAppointments: 3,
-            totalOrders: 12,
-            pendingOrders: 1,
-          },
-          healthRecord: {
-            vitals: {
-              bloodPressure: { systolic: 120, diastolic: 80, unit: "mmHg" },
-              bloodSugar: { value: 98, unit: "mg/dL" },
-              bmi: { value: 22.4 },
-              heartRate: { value: 72, unit: "bpm" },
-            },
-          },
-          recentAppointments: [
-            {
-              _id: 1,
-              doctor: { user: { name: "Dr. Rahul Patil" } },
-              appointmentDate: "2026-02-12",
-            },
-            {
-              _id: 2,
-              doctor: { user: { name: "Dr. Neha Sharma" } },
-              appointmentDate: "2026-02-05",
-            },
-          ],
-          recentOrders: [
-            {
-              _id: 1,
-              pharmacy: { pharmacyName: "Apollo Pharmacy" },
-              orderStatus: "delivered",
-            },
-            {
-              _id: 2,
-              pharmacy: { pharmacyName: "MedPlus" },
-              orderStatus: "pending",
-            },
-          ],
-        });
+        console.log("Dashboard API Response:", response.data);
+        setData(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setError(err.response?.data?.message || err.message);
+        setLoading(false);
       }
     };
 
-    loadDashboard();
+    fetchDashboard();
   }, []);
 
-  if (!data) return null;
+  if (loading) {
+    return (
+      <section className="max-w-7xl mx-auto p-6">
+        <div className="flex justify-center items-center py-20">
+          <div className="text-gray-600">Loading dashboard...</div>
+        </div>
+      </section>
+    );
+  }
 
-  const vitals = data.healthRecord?.vitals || {};
+  if (error) {
+    return (
+      <section className="max-w-7xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          Error: {error}
+        </div>
+      </section>
+    );
+  }
+
+  const stats = data?.stats || {};
+  const vitals = data?.healthRecord?.vitals || {};
+  const recentAppointments = data?.recentAppointments || [];
+  const recentOrders = data?.recentOrders || [];
+  const userName = data?.user?.name || "User";
 
   return (
-    <section className="p-6 bg-gray-50 min-h-screen">
+    <section className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">
-          Welcome back 👋
+          Welcome back <span className="text-blue-600">{userName}</span>
         </h1>
         <p className="text-sm text-gray-600">
-          Here’s a snapshot of your health & activity
+          Here's a snapshot of your health & activity
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 rounded">
         <DashboardCard
-          title="Appointments"
-          value={data.stats.totalAppointments}
-          icon={<Calendar size={22} />}
+          title="Total Appointments"
+          value={stats.totalAppointments ?? 0}
+          icon={<Calendar className="w-6 h-6 text-blue-700 opacity-80" />}
+          gradient="from-blue-50 to-blue-100"
         />
+
         <DashboardCard
-          title="Orders"
-          value={data.stats.totalOrders}
-          icon={<ShoppingBag size={22} />}
+          title="Medicine Orders"
+          value={stats.totalOrders ?? 0}
+          icon={<ShoppingBag className="w-6 h-6 text-purple-700 opacity-80" />}
+          gradient="from-purple-50 to-purple-100"
         />
+
         <DashboardCard
           title="Active Prescriptions"
-          value="2"
-          icon={<HeartPulse size={22} />}
+          value={stats.activePrescriptions ?? 0}
+          icon={<HeartPulse className="w-6 h-6 text-emerald-700 opacity-80" />}
+          gradient="from-emerald-50 to-emerald-100"
         />
+
         <DashboardCard
-          title="Health Alerts"
-          value={data.stats.pendingOrders}
-          icon={<AlertTriangle size={22} />}
+          title="Pending Actions"
+          value={stats.pendingOrders ?? 0}
+          icon={<AlertTriangle className="w-6 h-6 text-amber-700 opacity-80" />}
           highlight
+          gradient="from-amber-50 to-orange-100"
         />
       </div>
 
       {/* Main Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Health Summary */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow p-6">
-          <h2 className="font-semibold mb-4">Health Summary</h2>
-
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6">
+          <h2 className="font-semibold mb-4 text-gray-800 text-lg">
+            Health Summary
+          </h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <HealthStat
               label="Blood Pressure"
@@ -115,6 +128,7 @@ export default function DashboardOverview() {
                   ? `${vitals.bloodPressure.systolic} / ${vitals.bloodPressure.diastolic} ${vitals.bloodPressure.unit}`
                   : "—"
               }
+              icon={<Heart className="w-5 h-5 text-red-500" />}
             />
             <HealthStat
               label="Blood Sugar"
@@ -123,8 +137,13 @@ export default function DashboardOverview() {
                   ? `${vitals.bloodSugar.value} ${vitals.bloodSugar.unit}`
                   : "—"
               }
+              icon={<Thermometer className="w-5 h-5 text-orange-500" />}
             />
-            <HealthStat label="BMI" value={vitals.bmi?.value ?? "—"} />
+            <HealthStat
+              label="BMI"
+              value={vitals.bmi?.value ?? "—"}
+              icon={<Activity className="w-5 h-5 text-green-500" />}
+            />
             <HealthStat
               label="Heart Rate"
               value={
@@ -132,19 +151,21 @@ export default function DashboardOverview() {
                   ? `${vitals.heartRate.value} ${vitals.heartRate.unit}`
                   : "—"
               }
+              icon={<Heart className="w-5 h-5 text-pink-500" />}
             />
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h2 className="font-semibold mb-4">Quick Actions</h2>
-
+        <div className="bg-white rounded-2xl shadow p-6">
+          <h2 className="font-semibold mb-4 text-gray-800 text-lg">
+            Quick Actions
+          </h2>
           <ul className="space-y-3 text-sm">
-            <QuickAction text="Book Doctor Appointment" />
-            <QuickAction text="Order Medicines" />
-            <QuickAction text="Update Health Vitals" />
-            <QuickAction text="Emergency SOS" danger />
+            <QuickAction text="Book Doctor Appointment" to="/consult" />
+            <QuickAction text="Order Medicines" to="/medicines" />
+            <QuickAction text="Update Health Vitals" to="/tracker" />
+            <QuickAction text="Emergency SOS" to="/emergency" danger />
           </ul>
         </div>
       </div>
@@ -152,59 +173,97 @@ export default function DashboardOverview() {
       {/* Activity */}
       <div className="grid lg:grid-cols-2 gap-6 mt-6">
         <ActivityCard title="Recent Appointments">
-          {data.recentAppointments.map((a) => (
-            <ActivityItem
-              key={a._id}
-              left={a.doctor.user.name}
-              right={new Date(a.appointmentDate).toDateString()}
-            />
-          ))}
+          {recentAppointments.length > 0 ? (
+            recentAppointments.map((a) => (
+              <div
+                key={a._id ?? Math.random()}
+                className="flex justify-between items-center text-sm border-b pb-2 last:border-b-0"
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {a.doctor?.user?.name ?? a.doctor?.name ?? "—"}
+                  </span>
+                  <span className="text-gray-500 text-xs">
+                    {a.appointmentType
+                      ? a.appointmentType
+                      : "General Consultation"}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span>
+                    {a.appointmentDate
+                      ? new Date(a.appointmentDate).toLocaleString()
+                      : "—"}
+                  </span>
+                  <span
+                    className={`text-xs font-semibold ${
+                      a.status === "pending"
+                        ? "text-yellow-600"
+                        : a.status === "completed"
+                          ? "text-green-600"
+                          : "text-red-600"
+                    }`}
+                  >
+                    {a.status ?? "—"}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400 text-sm">No recent appointments</p>
+          )}
         </ActivityCard>
 
         <ActivityCard title="Recent Orders">
-          {data.recentOrders.map((o) => (
-            <ActivityItem
-              key={o._id}
-              left={o.pharmacy.pharmacyName}
-              right={o.orderStatus}
-              status
-            />
-          ))}
+          {recentOrders.length > 0 ? (
+            recentOrders.map((o) => (
+              <ActivityItem
+                key={o._id ?? Math.random()}
+                left={o.pharmacy?.pharmacyName ?? "—"}
+                right={o.orderStatus ?? "—"}
+                status
+              />
+            ))
+          ) : (
+            <p className="text-gray-400 text-sm">No recent orders</p>
+          )}
         </ActivityCard>
       </div>
     </section>
   );
 }
 
-/* --- helpers (unchanged UI) --- */
-
-function HealthStat({ label, value }) {
+/* --- helpers --- */
+function HealthStat({ label, value, icon }) {
   return (
-    <div className="border rounded-lg p-3">
-      <p className="text-gray-500">{label}</p>
-      <p className="font-medium text-gray-900">{value}</p>
+    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+      {icon}
+      <div>
+        <p className="text-gray-500 text-xs">{label}</p>
+        <p className="font-medium text-gray-900">{value}</p>
+      </div>
     </div>
   );
 }
 
-function QuickAction({ text, danger }) {
+function QuickAction({ text, to, danger }) {
   return (
-    <li
-      className={`p-3 rounded-lg cursor-pointer border transition ${
-        danger
-          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-          : "border-gray-200 hover:bg-gray-50"
-      }`}
-    >
-      {text}
+    <li>
+      <Link
+        to={to}
+        className={`block px-4 py-3 rounded-lg shadow-sm font-medium text-center transition
+          ${danger ? "bg-red-100 text-red-700 hover:bg-red-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}
+      >
+        {text}
+      </Link>
     </li>
   );
 }
 
 function ActivityCard({ title, children }) {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="font-semibold mb-4">{title}</h2>
+    <div className="bg-white rounded-2xl shadow p-6 max-h-80 overflow-y-auto">
+      <h2 className="font-semibold mb-4 text-gray-800">{title}</h2>
       <div className="space-y-3">{children}</div>
     </div>
   );
@@ -212,7 +271,7 @@ function ActivityCard({ title, children }) {
 
 function ActivityItem({ left, right, status }) {
   return (
-    <div className="flex justify-between text-sm border-b pb-2">
+    <div className="flex justify-between text-sm border-b pb-2 last:border-b-0">
       <span>{left}</span>
       <span
         className={

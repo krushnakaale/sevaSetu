@@ -3,17 +3,32 @@ const User = require("../models/User.model");
 const Doctor = require("../models/Doctor.model");
 const Pharmacy = require("../models/Pharmacy.model");
 const Appointment = require("../models/Appointment.model");
+const RoleRequest = require("../models/RoleRequest.model");
 const Order = require("../models/Order.model");
 const { sendEmail, emailTemplates } = require("../utils/sendEmail");
-
 
 // @desc    Get dashboard overview
 // @route   GET /api/admin/dashboard
 // @access  Private/Admin
 exports.getDashboard = asyncHandler(async (req, res) => {
-  const totalUsers = await User.countDocuments({ role: "user" });
-  const totalDoctors = await Doctor.countDocuments();
-  const totalPharmacies = await Pharmacy.countDocuments();
+  // ✅ FIXED: source of truth = User
+  const totalUsers = await User.countDocuments();
+
+  // const totalDoctors = await User.countDocuments({ role: "doctor" });
+  // const totalPharmacies = await User.countDocuments({ role: "pharmacy" });
+
+  const totalDoctors = await Doctor.countDocuments({
+    verificationStatus: "verified",
+  });
+
+  const totalPharmacies = await Pharmacy.countDocuments({
+    verificationStatus: "verified",
+  });
+
+  // await User.findByIdAndUpdate(doctor.user._id, { role: "doctor" });
+  // await User.findByIdAndUpdate(pharmacy.user._id, { role: "pharmacy" });
+
+  // ❌ leave these as-is (business logic depends on them)
   const totalAppointments = await Appointment.countDocuments();
   const totalOrders = await Order.countDocuments();
 
@@ -337,5 +352,139 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     success: true,
     count: orders.length,
     data: orders,
+  });
+});
+
+exports.reviewRoleRequest = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { action, rejectionReason } = req.body;
+  const adminId = req.user._id;
+
+  const roleRequest = await RoleRequest.findById(id);
+  if (!roleRequest) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Request not found" });
+  }
+
+  if (roleRequest.status !== "pending") {
+    return res
+      .status(400)
+      .json({ success: false, message: "Request already reviewed" });
+  }
+
+  // 👉 Reject flow
+  if (action === "reject") {
+    roleRequest.status = "rejected";
+    roleRequest.rejectionReason = rejectionReason;
+    roleRequest.reviewedBy = adminId;
+    roleRequest.reviewedAt = new Date();
+    await roleRequest.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Role request rejected",
+      data: roleRequest,
+    });
+  }
+
+  // 👉 Approve flow
+  if (action === "approve") {
+    const user = await User.findById(roleRequest.user);
+
+    // 1️⃣ Update user role
+    user.role = roleRequest.requestedRole;
+    await user.save();
+
+    // 2️⃣ Create profile based on role
+    if (roleRequest.requestedRole === "doctor") {
+      if (roleRequest.requestedRole === "doctor") {
+        const exists = await Doctor.findOne({ user: user._id });
+
+        if (!exists) {
+          await Doctor.create({
+            user: user._id,
+
+            specialization: roleRequest.formData.specialization,
+            experience: roleRequest.formData.experience,
+            registrationNumber: roleRequest.formData.registrationNumber,
+            registrationCouncil: roleRequest.formData.registrationCouncil,
+
+            consultationFee: roleRequest.formData.consultationFee || 500,
+            about: roleRequest.formData.about,
+
+            verificationStatus: "verified",
+            isVerified: true,
+            verifiedBy: adminId,
+            verifiedAt: new Date(),
+          });
+        }
+      }
+    }
+
+    if (roleRequest.requestedRole === "pharmacy") {
+      const exists = await Pharmacy.findOne({ user: user._id });
+
+      if (!exists) {
+        await Pharmacy.create({
+          user: user._id,
+          pharmacyName: roleRequest.formData.pharmacyName,
+          licenseNumber: roleRequest.formData.licenseNumber, // ✅ required
+          gstNumber: roleRequest.formData.gstNumber || "", // optional
+          email: roleRequest.formData.email, // ✅ required
+          contactNumber: roleRequest.formData.contactNumber, // ✅ required
+          address: roleRequest.formData.pharmacyAddress, // ✅ match form field
+          verificationStatus: "verified",
+          isVerified: true,
+          verifiedBy: adminId,
+          verifiedAt: new Date(),
+        });
+      }
+    }
+
+    // 3️⃣ Update request
+    roleRequest.status = "approved";
+    roleRequest.reviewedBy = adminId;
+    roleRequest.reviewedAt = new Date();
+    await roleRequest.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Role request approved successfully",
+      data: roleRequest,
+    });
+  }
+
+  res.status(400).json({ success: false, message: "Invalid action" });
+});
+
+// @desc    Get all role requests (admin)
+// @route   GET /api/admin/role-requests
+// @access  Admin
+exports.getRoleRequests = asyncHandler(async (req, res) => {
+  const { status, role, page = 1, limit = 20 } = req.query;
+  const filter = {};
+
+  if (status) filter.status = status; // pending / approved / rejected
+  if (role) filter.requestedRole = role; // doctor / pharmacy
+
+  const skip = (page - 1) * limit;
+
+  const roleRequests = await RoleRequest.find(filter)
+    .populate("user", "name email phone role")
+    .populate("reviewedBy", "name email")
+    .sort("-submittedAt")
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const total = await RoleRequest.countDocuments(filter);
+
+  res.status(200).json({
+    success: true,
+    count: roleRequests.length,
+    total,
+    page: parseInt(page),
+    pages: Math.ceil(total / limit),
+    data: roleRequests,
   });
 });

@@ -86,8 +86,8 @@ exports.getAllPharmacies = asyncHandler(async (req, res) => {
 
   // Build filter - only show verified and active pharmacies
   const filter = {
-    isVerified: true,
-    verificationStatus: "verified",
+    // isVerified: true,
+    // verificationStatus: "verified",
     isActive: true,
   };
 

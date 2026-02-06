@@ -69,6 +69,7 @@ export default function Navbar({ user, setUser }) {
                   <p className="px-4 py-2 border-b font-semibold">
                     {user.name}
                   </p>
+
                   <Link
                     to={
                       user.role === "admin" ? "/admin/dashboard" : "/dashboard"
@@ -78,6 +79,18 @@ export default function Navbar({ user, setUser }) {
                   >
                     Dashboard
                   </Link>
+
+                  {/* ADMIN ONLY */}
+                  {user.role === "admin" && (
+                    <Link
+                      to="/admin/role-requests"
+                      className="block px-4 py-2 hover:bg-gray-100"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Role Requests
+                    </Link>
+                  )}
+
                   <Link
                     to="/settings"
                     className="block px-4 py-2 hover:bg-gray-100"
@@ -85,6 +98,7 @@ export default function Navbar({ user, setUser }) {
                   >
                     Settings
                   </Link>
+
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -118,6 +132,16 @@ export default function Navbar({ user, setUser }) {
         >
           ×
         </button>
+
+        {user?.role === "admin" && (
+          <NavLink
+            to="/admin/role-requests"
+            onClick={() => setIsOpen(false)}
+            className="block px-4 py-3 my-2 rounded-lg text-lg font-medium text-white hover:bg-gray-700"
+          >
+            Role Requests
+          </NavLink>
+        )}
 
         {navLinks.map((link) => (
           <NavLink

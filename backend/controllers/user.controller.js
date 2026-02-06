@@ -3,6 +3,7 @@ const User = require("../models/User.model");
 const Appointment = require("../models/Appointment.model");
 const Order = require("../models/Order.model");
 const HealthRecord = require("../models/HealthRecord.model");
+const RoleRequest = require("../models/roleRequest.model");
 
 // @desc    Get user dashboard overview
 // @route   GET /api/user/dashboard
@@ -10,7 +11,10 @@ const HealthRecord = require("../models/HealthRecord.model");
 exports.getDashboard = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  // Get counts
+  // ✅ FETCH USER
+  const user = await User.findById(userId).select("name avatar");
+
+  // counts
   const totalAppointments = await Appointment.countDocuments({
     patient: userId,
   });
@@ -32,7 +36,6 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     },
   });
 
-  // Get recent appointments
   const recentAppointments = await Appointment.find({ patient: userId })
     .populate({
       path: "doctor",
@@ -41,18 +44,17 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     .sort("-createdAt")
     .limit(5);
 
-  // Get recent orders
   const recentOrders = await Order.find({ user: userId })
     .populate("pharmacy", "pharmacyName")
     .sort("-createdAt")
     .limit(5);
 
-  // Get health record
   const healthRecord = await HealthRecord.findOne({ user: userId });
 
   res.status(200).json({
     success: true,
     data: {
+      user, // ✅ NOW VALID
       stats: {
         totalAppointments,
         upcomingAppointments,
@@ -397,5 +399,38 @@ exports.updateSettings = asyncHandler(async (req, res) => {
       notifications,
       privacy,
     },
+  });
+});
+
+exports.submitRoleRequest = asyncHandler(async (req, res) => {
+  const { requestedRole, formData } = req.body;
+  const userId = req.user._id;
+
+  if (!["doctor", "pharmacy"].includes(requestedRole)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid role requested" });
+  }
+
+  const existingRequest = await RoleRequest.findOne({
+    user: userId,
+    status: "pending",
+  });
+  if (existingRequest) {
+    return res
+      .status(400)
+      .json({ success: false, message: "You already have a pending request" });
+  }
+
+  const roleRequest = await RoleRequest.create({
+    user: userId,
+    requestedRole,
+    formData,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Role request submitted successfully",
+    data: roleRequest,
   });
 });

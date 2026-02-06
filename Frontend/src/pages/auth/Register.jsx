@@ -38,7 +38,7 @@ export default function Register() {
 
       if (result.success) {
         setSuccess("Registration successful! Redirecting...");
-        setTimeout(() => navigate("/dashboard"), 2000);
+        setTimeout(() => navigate("/login"), 2000);
       } else {
         setError(result.message || "Registration failed");
       }

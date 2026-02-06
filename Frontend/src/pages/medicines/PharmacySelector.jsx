@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { getPharmacies } from "../../api/pharmacy";
+import {
+  FaStar,
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaMotorcycle,
+} from "react-icons/fa";
 
 export default function PharmacySelector() {
   const [pharmacies, setPharmacies] = useState([]);
@@ -9,7 +15,7 @@ export default function PharmacySelector() {
     async function fetchPharmacies() {
       try {
         setLoading(true);
-        const data = await getPharmacies(); // fetch from backend
+        const data = await getPharmacies();
         setPharmacies(data);
       } catch (err) {
         console.error(err);
@@ -35,25 +41,54 @@ export default function PharmacySelector() {
           Nearby Pharmacies
         </h2>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-flow-col auto-cols-[300px] gap-6 overflow-x-auto py-4 px-2">
           {pharmacies.map((ph) => (
             <div
               key={ph._id}
-              className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition"
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition duration-300 ease-in-out min-w-[300px] flex flex-col justify-between"
             >
-              <h3 className="font-semibold text-gray-900 text-lg mb-2">
-                {ph.pharmacyName}
-              </h3>
-              {ph.address?.city && (
-                <p className="text-sm text-gray-500 mb-1">
-                  City: {ph.address.city}
-                </p>
-              )}
-              <p className="text-sm text-gray-500 mb-4">
-                Rating: {ph.rating || "N/A"}
-              </p>
+              {/* Header */}
+              <div className="p-5 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    {ph.pharmacyName}
+                  </h3>
+                  {ph.isVerified && (
+                    <FaCheckCircle
+                      className="text-green-500"
+                      title="Verified Pharmacy"
+                    />
+                  )}
+                </div>
 
-              <button className="w-full py-2 rounded-md bg-gray-800 text-gray-100 font-medium hover:bg-gray-900 transition">
+                {/* Location */}
+                {ph.address?.city && (
+                  <p className="flex items-center text-sm text-gray-500 gap-1">
+                    <FaMapMarkerAlt className="text-gray-400" />{" "}
+                    {ph.address.city}
+                  </p>
+                )}
+
+                {/* Rating */}
+                <p className="flex items-center text-sm text-gray-500 gap-1">
+                  <FaStar className="text-yellow-400" />
+                  <span className="font-medium">
+                    {ph.rating?.toFixed(1) || "N/A"}
+                  </span>
+                  ({ph.totalRatings || 0})
+                </p>
+
+                {/* Delivery Info */}
+                {ph.deliveryRadius && (
+                  <p className="flex items-center text-sm text-gray-500 gap-1">
+                    <FaMotorcycle className="text-gray-400" />
+                    Delivery: {ph.deliveryRadius} km
+                  </p>
+                )}
+              </div>
+
+              {/* Footer */}
+              <button className="mt-auto m-5 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-700 text-white font-medium hover:from-green-600 hover:to-green-800 transition">
                 Select
               </button>
             </div>

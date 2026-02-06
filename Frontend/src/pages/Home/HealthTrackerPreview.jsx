@@ -40,11 +40,15 @@ export default function HealthTrackerPreview() {
 
         {/* OPTIONAL IMAGE (SUBTLE) */}
         <div className="hidden md:flex justify-center">
-          <img
-            src="/images/health.png"
-            alt="Health Monitoring Dashboard"
-            className="max-h-64 object-contain opacity-90"
-          />
+          <video
+            src="/videos/health.mp4" // place your video in public/videos folder
+            autoPlay
+            loop
+            muted
+            className="max-h-68 rounded object-contain opacity-90"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
       </div>
     </section>

@@ -10,9 +10,10 @@ const {
   addAllergy,
   addMedication,
   uploadDocument,
-  updateSettings, // ✅ New
-  getSettings, // ✅ New
-} = require("../controllers/user.controller");
+  updateSettings,
+  getSettings,
+  submitRoleRequest, // ✅ New
+} = require("../controllers/user.controller"); // import controller
 const { protect } = require("../middlewares/auth.middleware");
 
 const router = express.Router();
@@ -31,8 +32,11 @@ router.post("/health-records/allergies", addAllergy);
 router.post("/health-records/medications", addMedication);
 router.post("/health-records/documents", uploadDocument);
 
-// ✅ Settings routes
+// Settings
 router.get("/settings", getSettings);
 router.put("/settings", updateSettings);
+
+// ✅ Role request route
+router.post("/role-request", protect, submitRoleRequest);
 
 module.exports = router;

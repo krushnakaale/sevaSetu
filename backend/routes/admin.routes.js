@@ -11,9 +11,12 @@ const {
   deleteUser,
   getAllAppointments,
   getAllOrders,
-} = require("../controllers/admin.controller");
-const { protect, authorize } = require("../middlewares/auth.middleware"); // ✅ Fixed
-const { adminOnly } = require("../middlewares/role.middleware"); // ✅ Fixed
+  getRoleRequests, // ✅ New
+  reviewRoleRequest, // ✅ New
+} = require("../controllers/admin.controller"); // import controller
+
+const { protect, authorize } = require("../middlewares/auth.middleware");
+const { adminOnly } = require("../middlewares/role.middleware");
 
 const router = express.Router();
 
@@ -35,5 +38,10 @@ router.put("/pharmacies/:id/reject", rejectPharmacy);
 
 router.get("/appointments", getAllAppointments);
 router.get("/orders", getAllOrders);
+
+// ✅ Role Requests
+router.get("/role-requests", getRoleRequests);
+// router.put("/role-requests/:id", reviewRoleRequest);
+router.patch("/role-requests/:id", reviewRoleRequest);
 
 module.exports = router;

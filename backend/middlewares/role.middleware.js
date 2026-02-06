@@ -31,7 +31,6 @@ exports.checkDoctorVerification = asyncHandler(async (req, res, next) => {
 
 // Check if pharmacy is verified
 exports.checkPharmacyVerification = asyncHandler(async (req, res, next) => {
-  // Find pharmacy profile
   const pharmacy = await Pharmacy.findOne({ user: req.user._id });
 
   if (!pharmacy) {
@@ -41,7 +40,6 @@ exports.checkPharmacyVerification = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Check verification status
   if (!pharmacy.isVerified || pharmacy.verificationStatus !== "verified") {
     return res.status(403).json({
       success: false,
@@ -51,7 +49,6 @@ exports.checkPharmacyVerification = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Check if pharmacy is active
   if (!pharmacy.isActive) {
     return res.status(403).json({
       success: false,
@@ -59,8 +56,7 @@ exports.checkPharmacyVerification = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Attach pharmacy to request
-  req.pharmacy = pharmacy;
+  req.pharmacy = pharmacy; // Attach pharmacy info to request
   next();
 });
 
@@ -88,7 +84,6 @@ exports.checkOwnership = (model) => {
       });
     }
 
-    // Check if user owns the resource or is admin
     const isOwner = resource.user.toString() === req.user._id.toString();
     const isAdmin = req.user.role === "admin";
 

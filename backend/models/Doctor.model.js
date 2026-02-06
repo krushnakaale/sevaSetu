@@ -32,6 +32,7 @@ const doctorSchema = new mongoose.Schema(
         degree: String,
         institution: String,
         year: Number,
+        type: { type: String }, // Optional: MBBS, MD, Diploma etc.
       },
     ],
     experience: {
@@ -44,12 +45,10 @@ const doctorSchema = new mongoose.Schema(
       unique: true,
     },
     registrationCouncil: {
-      type: String, // MCI, State Medical Council
+      type: String,
       required: true,
     },
-    clinicHospitalName: {
-      type: String,
-    },
+    clinicHospitalName: String,
     clinicAddress: {
       street: String,
       city: String,
@@ -58,9 +57,10 @@ const doctorSchema = new mongoose.Schema(
     },
     consultationFee: {
       type: Number,
-      required: [true, "Please provide consultation fee"],
+      required: true,
       default: 500,
     },
+    currency: { type: String, default: "INR" },
     availability: [
       {
         day: {
@@ -77,61 +77,78 @@ const doctorSchema = new mongoose.Schema(
         },
         slots: [
           {
-            startTime: String, // "09:00"
-            endTime: String, // "10:00"
-            isBooked: { type: Boolean, default: false },
+            startTime: Date,
+            endTime: Date,
+            booking: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Appointment",
+            },
           },
         ],
       },
     ],
-    languages: [String],
+    languages: [
+      {
+        type: String,
+        enum: ["English", "Hindi", "Marathi", "Telugu", "Tamil", "Other"],
+      },
+    ],
     about: {
       type: String,
       maxlength: 500,
     },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-    totalRatings: {
-      type: Number,
-      default: 0,
-    },
-    totalConsultations: {
-      type: Number,
-      default: 0,
-    },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    totalRatings: { type: Number, default: 0 },
+    totalConsultations: { type: Number, default: 0 },
+    reviews: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rating: Number,
+        comment: String,
+        date: { type: Date, default: Date.now },
+      },
+    ],
     // Verification Fields
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
+    isVerified: { type: Boolean, default: false },
     verificationStatus: {
       type: String,
       enum: ["pending", "verified", "rejected"],
       default: "pending",
     },
-    documents: {
-      medicalLicense: String, // URL
-      degreeCertificate: String, // URL
-      idProof: String, // URL
+    verificationLogs: [
+      {
+        status: { type: String, enum: ["pending", "verified", "rejected"] },
+        reason: String,
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date, default: Date.now },
+      },
+    ],
+    documents: [
+      {
+        type: { type: String },
+        url: { type: String },
+      },
+    ],
+    rejectionReason: String,
+    verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    verifiedAt: Date,
+    contact: {
+      phone: String,
+      email: String,
+      website: String,
     },
-    rejectionReason: {
-      type: String,
-    },
-    verifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Admin who verified
-    },
-    verifiedAt: {
-      type: Date,
+    socialLinks: {
+      linkedin: String,
+      twitter: String,
+      instagram: String,
     },
   },
   {
     timestamps: true,
   },
 );
+
+// Optional Indexes for faster queries
+doctorSchema.index({ user: 1, specialization: 1 });
 
 module.exports = mongoose.model("Doctor", doctorSchema);

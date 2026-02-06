@@ -21,8 +21,9 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import Settings from "./pages/settings/Settings";
 
 // Dashboards
-import StudentDashboard from "./pages/dashboard/user/DashboardOverview";
+import UserDashboard from "./pages/dashboard/user/DashboardOverview";
 import AdminDashboard from "./pages/dashboard/admin/AdminOverview";
+import RoleRequestsAdmin from "./pages/dashboard/admin/RoleRequestsAdmin";
 
 // Auth
 import Login from "./pages/auth/Login";
@@ -30,6 +31,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
 import { getCurrentUser } from "./api/axios";
+import UsersList from "./pages/dashboard/admin/UsersList";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -60,24 +62,21 @@ export default function App() {
             {/* Public */}
             <Route path="/" element={<HomePage />} />
             <Route path="/contact" element={<ContactPage />} />
-
             {/* Core Health Features */}
             <Route path="/medicines" element={<MedicinesPage />} />
             <Route path="/consult" element={<ConsultPage />} />
             <Route path="/tracker" element={<TrackerPage />} />
             <Route path="/emergency" element={<EmergencyPage />} />
-
             {/* Auth */}
             <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/register" element={<Register setUser={setUser} />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-
             {/* User Protected */}
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute user={user} role="user">
-                  <StudentDashboard />
+                  <UserDashboard />
                 </ProtectedRoute>
               }
             />
@@ -98,6 +97,14 @@ export default function App() {
               }
             />
 
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute user={user} role="admin">
+                  <UsersList />
+                </ProtectedRoute>
+              }
+            />
             {/* Admin Protected */}
             <Route
               path="/admin/dashboard"
@@ -107,7 +114,55 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
+            <Route
+              path="/admin/role-requests"
+              element={
+                <ProtectedRoute user={user} role="admin">
+                  <RoleRequestsAdmin />
+                </ProtectedRoute>
+              }
+            />
+            {/* 
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute user={user}>
+                  <OrdersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order/:id"
+              element={
+                <ProtectedRoute user={user}>
+                  <OrderDetailPage />
+                </ProtectedRoute>
+              }
+            /> */}
+            {/* Doctor Pages */}
+            {/* <Route path="/doctors" element={<DoctorsListPage />} />
+            <Route path="/doctor/:id" element={<DoctorDetailPage />} /> */}
+            {/* Pharmacy Pages */}
+            {/* <Route path="/pharmacies" element={<PharmaciesListPage />} />
+            <Route path="/pharmacy/:id" element={<PharmacyDetailPage />} /> */}
+            {/* Doctor Dashboard */}
+            {/* <Route
+              path="/doctor/dashboard"
+              element={
+                <ProtectedRoute user={user} role="doctor">
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            /> */}
+            {/* Pharmacy Dashboard */}
+            {/* <Route
+              path="/pharmacy/dashboard"
+              element={
+                <ProtectedRoute user={user} role="pharmacy">
+                  <PharmacyDashboard />
+                </ProtectedRoute>
+              }
+            /> */}
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>

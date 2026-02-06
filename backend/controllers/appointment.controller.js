@@ -1,6 +1,7 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Appointment = require("../models/Appointment.model");
 const Doctor = require("../models/Doctor.model");
+const User = require("../models/User.model"); // ✅ Add this import
 const sendEmail = require("../utils/sendEmail");
 const { emailTemplates } = require("../utils/sendEmail");
 
@@ -34,6 +35,16 @@ exports.createAppointment = asyncHandler(async (req, res) => {
     });
   }
 
+  // ✅ Get patient details with name
+  const patient = await User.findById(req.user._id).select("name email");
+
+  if (!patient) {
+    return res.status(400).json({
+      success: false,
+      message: "Patient not found",
+    });
+  }
+
   // Create appointment
   const appointment = await Appointment.create({
     patient: req.user._id,
@@ -55,18 +66,20 @@ exports.createAppointment = asyncHandler(async (req, res) => {
 
   // Send confirmation email
   try {
+    // ✅ Use the patient variable we fetched
     await sendEmail({
-      email: req.user.email,
+      email: patient.email,
       subject: "Appointment Confirmed - AIPP Healthcare",
       html: emailTemplates.appointmentConfirmation(
-        req.user.name,
-        doctorDoc.user.name,
+        patient.name || "Patient", // ✅ Fallback to "Patient" if name is null
+        doctorDoc.user?.name || "Doctor", // ✅ Safe navigation
         new Date(appointmentDate).toLocaleDateString(),
         appointmentTime,
       ),
     });
   } catch (error) {
     console.error("Error sending appointment confirmation email:", error);
+    // ✅ Don't fail the appointment creation if email fails
   }
 
   res.status(201).json({

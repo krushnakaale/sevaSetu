@@ -2,7 +2,7 @@ import React from "react";
 
 export default function DeviceConnect() {
   return (
-    <section className="py-12 max-w-7xl mx-auto px-4 rounded-xl shadow-sm">
+    <section className="py-12 max-w-7xl mx-auto px-4 rounded-xl shadow-sm bg-white">
       <div className="flex flex-col md:flex-row items-center gap-8">
         {/* Text Section */}
         <div className="flex-1 text-center md:text-left">
@@ -18,13 +18,17 @@ export default function DeviceConnect() {
           </button>
         </div>
 
-        {/* Image Section */}
-        <div className="flex flex-1 items-center justify-center h-full">
-          <img
-            src="/images/device.png"
-            alt="Smart Band"
-            className="w-64 h-auto"
-          />
+        {/* Video Section */}
+        <div className="flex-1 flex justify-center">
+          <video
+            src="/videos/health.mp4"
+            autoPlay
+            loop
+            muted
+            className="w-full max-w-md md:max-w-lg rounded-lg shadow-lg object-cover transition-transform duration-300 hover:scale-105"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
       </div>
     </section>
